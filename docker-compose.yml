@@ -35,7 +35,7 @@ services:
       DJANGO_SETTINGS_MODULE: aigitgateway.settings.production
       APP_URL: ${APP_URL:-}
       SECRET_KEY: ${SERVICE_HEX_64_DJANGO}
-      DATABASE_URL: postgresql://${POSTGRES_USER:-aigitgateway}:${SERVICE_PASSWORD_POSTGRES}@db:5432/${POSTGRES_DB:-aigitgateway}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://${POSTGRES_USER:-aigitgateway}:${SERVICE_PASSWORD_POSTGRES}@db:5432/${POSTGRES_DB:-aigitgateway}}
       DATABASE_CONN_MAX_AGE: ${DATABASE_CONN_MAX_AGE:-60}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-}
       CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-}

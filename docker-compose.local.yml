@@ -1,7 +1,24 @@
 services:
   db:
+    image: postgres:17-alpine
+    restart: unless-stopped
     environment:
+      POSTGRES_DB: aigitgateway
+      POSTGRES_USER: aigitgateway
       POSTGRES_PASSWORD: local-postgres-change-me
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aigitgateway -d aigitgateway"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   web:
     ports:
@@ -17,3 +34,9 @@ services:
       DJANGO_SUPERUSER_USERNAME: admin
       DJANGO_SUPERUSER_PASSWORD: change-me-now
       GITHUB_AUTH_MODE: token
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

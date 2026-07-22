@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Token created · AI Git Gateway{% endblock %}
+{% block section_name %}Access{% endblock %}
+{% block header_title %}Token created{% endblock %}
+{% block content %}
+<div class="secret-page">
+  <section class="card secret-card">
+    <div class="success-orb"><svg><use href="{% static 'gateway/icons.svg' %}#check"></use></svg></div>
+    <span class="eyebrow">Access ready</span>
+    <h1>Copy this token now</h1>
+    <p>This is the only time the full secret will be shown. The database stores only a one-way hash.</p>
+    <div class="secret-value"><code id="new-token">{{ raw_token }}</code><button class="button secondary compact" type="button" data-copy="#new-token"><svg><use href="{% static 'gateway/icons.svg' %}#copy"></use></svg><span data-copy-label>Copy token</span></button></div>
+    <div class="secret-warning"><svg><use href="{% static 'gateway/icons.svg' %}#alert"></use></svg><div><strong>Remove access when the job is finished.</strong><span>Anyone holding this token can push to its allowed projects until you revoke it or it expires.</span></div></div>
+    <div class="secret-actions"><a class="button primary" href="{% url 'instructions' %}">Open AI instructions <svg><use href="{% static 'gateway/icons.svg' %}#arrow"></use></svg></a><a class="button secondary" href="{% url 'token_list' %}">Back to tokens</a></div>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Projects · AI Git Gateway{% endblock %}
+{% block section_name %}Workspace{% endblock %}
+{% block header_title %}Projects{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><span class="eyebrow">Repository access</span><h1>Projects</h1><p>Each project maps one gateway slug to one GitHub repository.</p></div>
+  <a class="button primary" href="{% url 'project_create' %}"><svg><use href="{% static 'gateway/icons.svg' %}#plus"></use></svg>Add project</a>
+</section>
+
+{% if projects %}
+<section class="project-grid">
+  {% for project in projects %}
+  <article class="project-card {% if not project.is_active %}disabled{% endif %}">
+    <div class="project-top">
+      <span class="project-avatar">{{ project.name|slice:':1'|upper }}</span>
+      <div class="project-actions"><span class="status-pill {% if project.is_active %}success{% else %}neutral{% endif %}"><i></i>{% if project.is_active %}Active{% else %}Paused{% endif %}</span><a class="icon-link" href="{% url 'project_edit' project.pk %}" aria-label="Edit {{ project.name }}"><svg><use href="{% static 'gateway/icons.svg' %}#chevron"></use></svg></a></div>
+    </div>
+    <h2>{{ project.name }}</h2>
+    <p class="repository-name"><svg><use href="{% static 'gateway/icons.svg' %}#git"></use></svg>{{ project.full_name }}</p>
+    <div class="project-meta">
+      <div><span>Project slug</span><code>{{ project.slug }}</code></div>
+      <div><span>Default branch</span><code>{{ project.default_branch }}</code></div>
+    </div>
+    <div class="project-footer">
+      <div><span class="mini-dot {% if project.direct_push_enabled %}on{% endif %}"></span><strong>Direct push</strong><small>{% if project.direct_push_enabled %}Enabled{% else %}Disabled{% endif %}</small></div>
+      <a href="{% url 'project_edit' project.pk %}">Manage <svg><use href="{% static 'gateway/icons.svg' %}#arrow"></use></svg></a>
+    </div>
+  </article>
+  {% endfor %}
+</section>
+{% else %}
+<section class="card empty-state"><div class="empty-icon"><svg><use href="{% static 'gateway/icons.svg' %}#projects"></use></svg></div><h2>Add your first project</h2><p>Connect a GitHub repository before creating an agent token.</p><a class="button primary" href="{% url 'project_create' %}"><svg><use href="{% static 'gateway/icons.svg' %}#plus"></use></svg>Add project</a></section>
+{% endif %}
+{% endblock %}

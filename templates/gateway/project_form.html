@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ title }} · AI Git Gateway{% endblock %}
+{% block section_name %}Projects{% endblock %}
+{% block header_title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="page-heading narrow-heading">
+  <div><span class="eyebrow">Repository settings</span><h1>{{ title }}</h1><p>Choose where the agent can push. GitHub credentials remain inside this gateway.</p></div>
+</section>
+<div class="form-layout">
+  <form method="post" class="card form-card">{% csrf_token %}
+    {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+    <div class="form-section"><div class="form-section-head"><span>01</span><div><h2>Repository</h2><p>The GitHub repository exposed as this project.</p></div></div>
+      <div class="form-two">
+      {% for field in form %}{% if field.name == 'name' or field.name == 'github_owner' or field.name == 'github_repo' or field.name == 'installation_id' %}
+        <div class="field {% if field.name == 'name' or field.name == 'installation_id' %}wide{% endif %}">{{ field.label_tag }}{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+      {% endif %}{% endfor %}
+      </div>
+    </div>
+    <div class="form-section"><div class="form-section-head"><span>02</span><div><h2>Push policy</h2><p>Restrict direct delivery to branches you trust.</p></div></div>
+      {% for field in form %}{% if field.name == 'default_branch' or field.name == 'allowed_branches' %}
+      <div class="field">{{ field.label_tag }}{{ field }}{% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}{% for error in field.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+      {% endif %}{% endfor %}
+      <div class="toggle-grid">
+      {% for field in form %}{% if field.name == 'direct_push_enabled' or field.name == 'is_active' %}
+      <label class="toggle-card" for="{{ field.id_for_label }}"><span>{{ field }}<i></i></span><div><strong>{{ field.label }}</strong><small>{% if field.name == 'direct_push_enabled' %}Allow non-force commits through the API.{% else %}Make this project available to agents.{% endif %}</small></div></label>
+      {% endif %}{% endfor %}
+      </div>
+    </div>
+    <div class="form-actions"><a class="button secondary" href="{% url 'project_list' %}">Cancel</a><button class="button primary" type="submit">Save project</button></div>
+  </form>
+  <aside class="form-aside">
+    <section class="card info-card"><div class="info-icon"><svg><use href="{% static 'gateway/icons.svg' %}#shield"></use></svg></div><h2>Safe by default</h2><p>Branch protection still applies. The gateway never uses force push and cannot bypass GitHub rules.</p></section>
+    <section class="card info-card"><div class="info-icon"><svg><use href="{% static 'gateway/icons.svg' %}#key"></use></svg></div><h2>Authentication mode</h2><p><strong>GitHub App:</strong> enter the installation ID. <strong>Server token:</strong> leave it blank.</p></section>
+  </aside>
+</div>
+{% endblock %}

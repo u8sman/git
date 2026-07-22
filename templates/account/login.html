@@ -1,0 +1,42 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#11131a">
+  <title>Sign in · AI Git Gateway</title>
+  <link rel="icon" href="{% static 'gateway/favicon.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'gateway/style.css' %}">
+</head>
+<body class="auth-page">
+  <main class="auth-shell">
+    <section class="auth-panel">
+      <a class="auth-brand" href="{% url 'instructions' %}"><img src="{% static 'gateway/mark.svg' %}" alt=""><span><strong>AI Git</strong><small>Gateway</small></span></a>
+      <div class="auth-copy"><span class="eyebrow">Private control panel</span><h1>Welcome back</h1><p>Sign in to manage repositories, agent access, and direct pushes.</p></div>
+      <form method="post" action="{% url 'account_login' %}" class="auth-form">{% csrf_token %}
+        {% if form.non_field_errors %}<div class="auth-error">{{ form.non_field_errors }}</div>{% endif %}
+        <div class="field"><label for="{{ form.login.id_for_label }}">Username or email</label>{{ form.login }}{% for error in form.login.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+        <div class="field"><label for="{{ form.password.id_for_label }}">Password</label>{{ form.password }}{% for error in form.password.errors %}<span class="field-error">{{ error }}</span>{% endfor %}</div>
+        {% if form.remember %}<label class="remember-field">{{ form.remember }}<span>Keep me signed in</span></label>{% endif %}
+        {% if redirect_field_value %}<input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">{% endif %}
+        <button class="button primary full large" type="submit">Sign in <svg><use href="{% static 'gateway/icons.svg' %}#arrow"></use></svg></button>
+      </form>
+      <p class="auth-help">Accounts are created by an administrator. Public sign-up is disabled.</p>
+    </section>
+    <aside class="auth-visual">
+      <div class="auth-glow"></div>
+      <div class="auth-console">
+        <div class="console-top"><span></span><span></span><span></span><em>push-result.json</em></div>
+        <pre>{
+  <b>"ok"</b>: true,
+  <b>"project"</b>: "website",
+  <b>"branch"</b>: "main",
+  <b>"commit_sha"</b>: "83d9e42...",
+  <b>"files"</b>: 7
+}</pre>
+      </div>
+      <div class="auth-feature"><div><svg><use href="{% static 'gateway/icons.svg' %}#shield"></use></svg></div><span><strong>GitHub credentials stay private</strong><small>AI agents receive only revocable gateway access.</small></span></div>
+    </aside>
+  </main>
+</body>
+</html>

@@ -1,0 +1,5 @@
+{% extends "errors/base_error.html" %}
+{% block title %}Server error{% endblock %}
+{% block code %}500{% endblock %}
+{% block heading %}The gateway hit a problem{% endblock %}
+{% block message %}No push was retried automatically. Review the service logs before trying again.{% endblock %}

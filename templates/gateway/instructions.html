@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}AI instructions · AI Git Gateway{% endblock %}
+{% block section_name %}Documentation{% endblock %}
+{% block header_title %}AI instructions{% endblock %}
+{% block content %}
+<section class="docs-hero">
+  <div class="docs-bot"><svg><use href="{% static 'gateway/icons.svg' %}#bot"></use></svg></div>
+  <div><span class="eyebrow">For AI coding tools</span><h1>Finish the code, then push it here.</h1><p>Give this page and an agent token to any tool that can make HTTP requests. It needs only two API calls.</p></div>
+  <a class="button secondary" href="{% url 'instructions_json' %}" target="_blank">Machine-readable JSON <svg><use href="{% static 'gateway/icons.svg' %}#external"></use></svg></a>
+</section>
+
+<div class="docs-grid">
+  <aside class="docs-aside">
+    <nav class="card docs-nav"><span>On this page</span><a href="#agent-prompt">Agent prompt</a><a href="#discover">Discover projects</a><a href="#push">Push files</a><a href="#rules">Rules</a></nav>
+    <section class="card docs-tip"><svg><use href="{% static 'gateway/icons.svg' %}#shield"></use></svg><strong>The AI never needs your GitHub token.</strong><p>Give it only the `aig_...` gateway token.</p></section>
+  </aside>
+
+  <div class="docs-content">
+    <section id="agent-prompt" class="card docs-card">
+      <div class="docs-card-head"><div><span>01</span><h2>Copy this instruction into the AI tool</h2></div><button class="button secondary compact" type="button" data-copy="#agent-prompt-text"><svg><use href="{% static 'gateway/icons.svg' %}#copy"></use></svg><span data-copy-label>Copy prompt</span></button></div>
+      <pre id="agent-prompt-text">You can push completed code through AI Git Gateway.
+
+Gateway API: {{ api_base }}
+Authentication: Authorization: Bearer &lt;AI_GIT_TOKEN&gt;
+
+1. Call GET {{ api_base }}/projects to find the allowed project slug, repository, default branch, and branch policy.
+2. Finish and verify the requested code before pushing.
+3. Call POST {{ api_base }}/push with project, branch, commit_message, and every changed file.
+4. For text files use {"path":"...","content":"..."}.
+5. For binary files use {"path":"...","content_base64":"..."}.
+6. To delete a file use {"path":"...","delete":true}.
+7. Never reveal, print, log, or commit the AI_GIT_TOKEN.
+8. Do not retry a conflict blindly. Report the error to the user.
+9. Return the commit_url after success.
+10. Remind the user to revoke this agent token after the job.</pre>
+    </section>
+
+    <section id="discover" class="card docs-card">
+      <div class="docs-card-head"><div><span>02</span><h2>Discover allowed projects</h2></div><button class="button secondary compact" type="button" data-copy="#discover-code"><svg><use href="{% static 'gateway/icons.svg' %}#copy"></use></svg><span data-copy-label>Copy</span></button></div>
+      <pre id="discover-code">curl {{ api_base }}/projects \
+  -H "Authorization: Bearer $AI_GIT_TOKEN"</pre>
+      <p class="docs-note">The response contains only projects accessible to that token.</p>
+    </section>
+
+    <section id="push" class="card docs-card" data-tab-group>
+      <div class="docs-card-head"><div><span>03</span><h2>Push completed files</h2></div></div>
+      <div class="code-tabs"><button class="active" type="button" data-tab="curl">cURL</button><button type="button" data-tab="python">Python</button><button type="button" data-tab="json">JSON body</button></div>
+      <div data-tab-panel="curl"><div class="code-toolbar"><button type="button" data-copy="#curl-code"><svg><use href="{% static 'gateway/icons.svg' %}#copy"></use></svg><span data-copy-label>Copy</span></button></div><pre id="curl-code">curl -X POST {{ api_base }}/push \
+  -H "Authorization: Bearer $AI_GIT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project": "my-project",
+    "branch": "main",
+    "commit_message": "Complete requested feature",
+    "files": [
+      {"path": "app/main.py", "content": "print(\"ready\")\n"},
+      {"path": "old_file.py", "delete": true}
+    ]
+  }'</pre></div>
+      <div data-tab-panel="python" hidden><div class="code-toolbar"><button type="button" data-copy="#python-code"><svg><use href="{% static 'gateway/icons.svg' %}#copy"></use></svg><span data-copy-label>Copy</span></button></div><pre id="python-code">import os
+import httpx
+
+response = httpx.post(
+    "{{ api_base }}/push",
+    headers={"Authorization": f"Bearer {os.environ['AI_GIT_TOKEN']}"},
+    json={
+        "project": "my-project",
+        "branch": "main",
+        "commit_message": "Complete requested feature",
+        "files": [
+            {"path": "app/main.py", "content": "print('ready')\n"},
+        ],
+    },
+    timeout=60,
+)
+response.raise_for_status()
+print(response.json()["commit_url"])</pre></div>
+      <div data-tab-panel="json" hidden><div class="code-toolbar"><button type="button" data-copy="#json-code"><svg><use href="{% static 'gateway/icons.svg' %}#copy"></use></svg><span data-copy-label>Copy</span></button></div><pre id="json-code">{
+  "project": "my-project",
+  "branch": "main",
+  "commit_message": "Complete requested feature",
+  "expected_head": "optional-current-commit-sha",
+  "files": [
+    {"path": "text.txt", "content": "UTF-8 content"},
+    {"path": "image.png", "content_base64": "..."},
+    {"path": "remove-me.txt", "delete": true}
+  ]
+}</pre></div>
+    </section>
+
+    <section id="rules" class="card docs-card">
+      <div class="docs-card-head"><div><span>04</span><h2>Delivery rules</h2></div></div>
+      <div class="rules-grid">
+        <div><svg><use href="{% static 'gateway/icons.svg' %}#check"></use></svg><div><strong>Completed files only</strong><p>The gateway does not execute code or shell commands.</p></div></div>
+        <div><svg><use href="{% static 'gateway/icons.svg' %}#shield"></use></svg><div><strong>Non-force pushes</strong><p>GitHub rejects protected branches and conflicting updates.</p></div></div>
+        <div><svg><use href="{% static 'gateway/icons.svg' %}#key"></use></svg><div><strong>Keep the token secret</strong><p>Never place it in source files, logs, prompts, or commits.</p></div></div>
+        <div><svg><use href="{% static 'gateway/icons.svg' %}#alert"></use></svg><div><strong>Revoke after use</strong><p>The administrator should remove access when the task ends.</p></div></div>
+      </div>
+    </section>
+  </div>
+</div>
+{% endblock %}

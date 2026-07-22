@@ -1,0 +1,9 @@
+{% extends "errors/base_error.html" %}
+{% block title %}Access denied{% endblock %}
+{% block code %}403{% endblock %}
+{% block heading %}Staff access required{% endblock %}
+{% block message %}This private control panel is available only to active staff accounts.{% endblock %}
+{% block actions %}
+<form method="post" action="/accounts/logout/">{% csrf_token %}<button class="button secondary" type="submit">Sign out</button></form>
+<a class="button primary" href="/accounts/login/">Use another account</a>
+{% endblock %}

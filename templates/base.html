@@ -1,0 +1,97 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#11131a">
+  <title>{% block title %}AI Git Gateway{% endblock %}</title>
+  <link rel="icon" href="{% static 'gateway/favicon.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'gateway/style.css' %}">
+</head>
+<body class="{% if request.user.is_authenticated %}is-authenticated{% else %}is-public{% endif %}">
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Primary navigation">
+      <a class="brand" href="{% url 'dashboard' %}">
+        <img src="{% static 'gateway/mark.svg' %}" alt="">
+        <span><strong>AI Git</strong><small>Gateway</small></span>
+      </a>
+
+      <div class="sidebar-section-label">Workspace</div>
+      <nav class="sidebar-nav">
+        <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+          <svg><use href="{% static 'gateway/icons.svg' %}#home"></use></svg><span>Overview</span>
+        </a>
+        <a href="{% url 'project_list' %}" class="{% if 'project' in request.resolver_match.url_name %}active{% endif %}">
+          <svg><use href="{% static 'gateway/icons.svg' %}#projects"></use></svg><span>Projects</span>
+        </a>
+        <a href="{% url 'token_list' %}" class="{% if 'token' in request.resolver_match.url_name %}active{% endif %}">
+          <svg><use href="{% static 'gateway/icons.svg' %}#key"></use></svg><span>Agent tokens</span>
+          {% if active_agent_token_count %}<em>{{ active_agent_token_count }}</em>{% endif %}
+        </a>
+        <a href="{% url 'push_history' %}" class="{% if request.resolver_match.url_name == 'push_history' %}active{% endif %}">
+          <svg><use href="{% static 'gateway/icons.svg' %}#history"></use></svg><span>Push history</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-section-label">Help</div>
+      <nav class="sidebar-nav">
+        <a href="{% url 'instructions' %}" class="{% if request.resolver_match.url_name == 'instructions' %}active{% endif %}">
+          <svg><use href="{% static 'gateway/icons.svg' %}#bot"></use></svg><span>AI instructions</span>
+        </a>
+        {% if request.user.is_staff %}
+        <a href="{% url 'admin:index' %}">
+          <svg><use href="{% static 'gateway/icons.svg' %}#shield"></use></svg><span>Advanced admin</span>
+          <svg class="nav-external"><use href="{% static 'gateway/icons.svg' %}#external"></use></svg>
+        </a>
+        {% endif %}
+      </nav>
+
+      <div class="sidebar-foot">
+        <div class="connection-state{% if not gateway_configured %} offline{% endif %}"><span></span><div><strong>{% if gateway_configured %}GitHub connected{% else %}Setup required{% endif %}</strong><small>{{ gateway_auth_label }}</small></div></div>
+      </div>
+    </aside>
+    <div class="sidebar-overlay" data-sidebar-overlay></div>
+
+    <div class="app-main">
+      <header class="topbar">
+        <button class="icon-button mobile-menu" type="button" data-sidebar-toggle aria-label="Open navigation">
+          <svg><use href="{% static 'gateway/icons.svg' %}#menu"></use></svg>
+        </button>
+        <div class="topbar-title">
+          <span>{% block section_name %}Workspace{% endblock %}</span>
+          <strong>{% block header_title %}AI Git Gateway{% endblock %}</strong>
+        </div>
+        <div class="topbar-actions">
+          {% if request.user.is_authenticated %}
+          <div class="user-menu">
+            <span class="avatar">{{ request.user.get_username|slice:':1'|upper }}</span>
+            <div><strong>{{ request.user.get_full_name|default:request.user.get_username }}</strong><small>Administrator</small></div>
+          </div>
+          <form method="post" action="{% url 'account_logout' %}">{% csrf_token %}<button class="button ghost compact" type="submit">Sign out</button></form>
+          {% else %}
+          <a class="button primary compact" href="{% url 'account_login' %}">Admin sign in</a>
+          {% endif %}
+        </div>
+      </header>
+
+      <main class="content">
+        {% if active_agent_token_count and request.user.is_authenticated %}
+        <div class="token-warning">
+          <div class="warning-icon"><svg><use href="{% static 'gateway/icons.svg' %}#alert"></use></svg></div>
+          <div><strong>{{ active_agent_token_count }} active agent token{{ active_agent_token_count|pluralize }}</strong><span>Revoke access when the AI has finished pushing code.</span></div>
+          <a href="{% url 'token_list' %}">Review access <svg><use href="{% static 'gateway/icons.svg' %}#arrow"></use></svg></a>
+        </div>
+        {% endif %}
+
+        {% for message in messages %}
+        <div class="flash {{ message.tags }}"><span>{{ message }}</span><button type="button" data-dismiss aria-label="Dismiss"><svg><use href="{% static 'gateway/icons.svg' %}#x"></use></svg></button></div>
+        {% endfor %}
+
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+  <script src="{% static 'gateway/app.js' %}"></script>
+</body>
+</html>

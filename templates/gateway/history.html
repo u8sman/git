@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Push history · AI Git Gateway{% endblock %}
+{% block section_name %}Delivery{% endblock %}
+{% block header_title %}Push history{% endblock %}
+{% block content %}
+<section class="page-heading"><div><span class="eyebrow">Audit trail</span><h1>Push history</h1><p>Every direct-push attempt is recorded, including failures and the agent token used.</p></div></section>
+<section class="card history-card">
+{% if pushes %}
+<div class="responsive-table">
+<table>
+  <thead><tr><th>Time</th><th>Project</th><th>Commit message</th><th>Branch</th><th>Files</th><th>Agent</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for push in pushes %}
+  <tr>
+    <td class="nowrap"><strong>{{ push.created_at|date:'j M Y' }}</strong><small>{{ push.created_at|date:'H:i:s' }}</small></td>
+    <td><div class="repo-cell"><span>{{ push.project.name|slice:':1'|upper }}</span><div><strong>{{ push.project.name }}</strong><small>{{ push.project.full_name }}</small></div></div></td>
+    <td><span class="commit-message">{{ push.commit_message|truncatechars:62 }}</span>{% if push.error_message %}<small class="error-text" title="{{ push.error_message }}">{{ push.error_message|truncatechars:70 }}</small>{% elif push.commit_sha %}<small class="mono">{{ push.commit_sha|slice:':10' }}</small>{% endif %}</td>
+    <td><span class="branch-chip">{{ push.branch }}</span></td>
+    <td>{{ push.file_count }}</td>
+    <td>{% if push.token %}{{ push.token.name }}{% else %}<span class="muted">Deleted token</span>{% endif %}</td>
+    <td><span class="status-pill {{ push.status }}"><i></i>{{ push.get_status_display }}</span></td>
+    <td>{% if push.commit_url %}<a class="icon-link" href="{{ push.commit_url }}" target="_blank" rel="noopener" aria-label="Open commit"><svg><use href="{% static 'gateway/icons.svg' %}#external"></use></svg></a>{% endif %}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}<div class="empty-state"><div class="empty-icon"><svg><use href="{% static 'gateway/icons.svg' %}#history"></use></svg></div><h2>No push records</h2><p>Successful and failed API pushes will appear here.</p></div>{% endif %}
+</section>
+{% endblock %}

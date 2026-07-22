@@ -1,0 +1,23 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#11131a">
+  <title>{% block title %}Something went wrong{% endblock %} · AI Git Gateway</title>
+  <link rel="icon" href="{% static 'gateway/favicon.svg' %}" type="image/svg+xml">
+  <link rel="stylesheet" href="{% static 'gateway/style.css' %}">
+</head>
+<body class="error-page">
+  <main class="error-shell">
+    <a class="auth-brand error-brand" href="/"><img src="{% static 'gateway/mark.svg' %}" alt=""><span><strong>AI Git</strong><small>Gateway</small></span></a>
+    <section class="error-card">
+      <span class="error-code">{% block code %}Error{% endblock %}</span>
+      <h1>{% block heading %}Something went wrong{% endblock %}</h1>
+      <p>{% block message %}The request could not be completed.{% endblock %}</p>
+      <div class="error-actions">{% block actions %}<a class="button primary" href="/">Return home</a>{% endblock %}</div>
+    </section>
+  </main>
+</body>
+</html>

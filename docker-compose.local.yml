@@ -1,0 +1,19 @@
+services:
+  db:
+    environment:
+      POSTGRES_PASSWORD: local-postgres-change-me
+
+  web:
+    ports:
+      - "8000:8000"
+    read_only: false
+    environment:
+      DJANGO_SETTINGS_MODULE: aigitgateway.settings.local
+      APP_URL: http://localhost:8000
+      SERVICE_URL_WEB_8000: http://localhost:8000
+      SECRET_KEY: local-compose-only-key
+      DATABASE_URL: postgresql://aigitgateway:local-postgres-change-me@db:5432/aigitgateway
+      CREATE_SUPERUSER: "1"
+      DJANGO_SUPERUSER_USERNAME: admin
+      DJANGO_SUPERUSER_PASSWORD: change-me-now
+      GITHUB_AUTH_MODE: token

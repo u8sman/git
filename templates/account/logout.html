@@ -1,0 +1,4 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Sign out · AI Git Gateway{% endblock %}
+{% block content %}<div class="secret-page"><section class="card secret-card"><div class="success-orb neutral"><svg><use href="{% static 'gateway/icons.svg' %}#shield"></use></svg></div><h1>Sign out?</h1><p>Your active agent tokens will remain active until separately revoked.</p><form method="post" action="{% url 'account_logout' %}">{% csrf_token %}<div class="secret-actions"><button class="button primary" type="submit">Sign out</button><a class="button secondary" href="{% url 'dashboard' %}">Cancel</a></div></form></section></div>{% endblock %}

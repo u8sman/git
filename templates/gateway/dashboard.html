@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Overview · AI Git Gateway{% endblock %}
+{% block section_name %}Workspace{% endblock %}
+{% block header_title %}Overview{% endblock %}
+{% block content %}
+<section class="hero-row">
+  <div>
+    <span class="eyebrow">Direct code delivery</span>
+    <h1>Give AI a safe lane to GitHub.</h1>
+    <p>Create a scoped token, share the instruction page, and let the agent push completed files without seeing your GitHub credential.</p>
+  </div>
+  <div class="hero-actions">
+    <a class="button secondary" href="{% url 'instructions' %}"><svg><use href="{% static 'gateway/icons.svg' %}#bot"></use></svg>View AI instructions</a>
+    <a class="button primary" href="{% url 'token_list' %}"><svg><use href="{% static 'gateway/icons.svg' %}#plus"></use></svg>Create agent token</a>
+  </div>
+</section>
+
+<section class="metric-grid">
+  <article class="metric-card">
+    <div class="metric-icon violet"><svg><use href="{% static 'gateway/icons.svg' %}#projects"></use></svg></div>
+    <div><span>Active projects</span><strong>{{ project_count }}</strong><small>{{ direct_push_projects }} ready for direct push</small></div>
+  </article>
+  <article class="metric-card">
+    <div class="metric-icon amber"><svg><use href="{% static 'gateway/icons.svg' %}#key"></use></svg></div>
+    <div><span>Active tokens</span><strong>{{ active_tokens }}</strong><small>{% if active_tokens %}Review after every AI job{% else %}No agent has access{% endif %}</small></div>
+  </article>
+  <article class="metric-card">
+    <div class="metric-icon green"><svg><use href="{% static 'gateway/icons.svg' %}#check"></use></svg></div>
+    <div><span>Successful pushes</span><strong>{{ successful_pushes }}</strong><small>{% if success_rate != None %}{{ success_rate }}% delivery success{% else %}Waiting for first push{% endif %}</small></div>
+  </article>
+  <article class="metric-card">
+    <div class="metric-icon red"><svg><use href="{% static 'gateway/icons.svg' %}#x"></use></svg></div>
+    <div><span>Failed pushes</span><strong>{{ failed_pushes }}</strong><small>Conflicts and policy rejections</small></div>
+  </article>
+</section>
+
+<div class="dashboard-grid">
+  <section class="card activity-card">
+    <div class="card-head">
+      <div><span class="card-kicker">Delivery activity</span><h2>Recent pushes</h2></div>
+      <a class="subtle-link" href="{% url 'push_history' %}">View all <svg><use href="{% static 'gateway/icons.svg' %}#arrow"></use></svg></a>
+    </div>
+    {% if recent_pushes %}
+    <div class="responsive-table">
+      <table>
+        <thead><tr><th>Project</th><th>Commit</th><th>Branch</th><th>Status</th><th>When</th></tr></thead>
+        <tbody>
+        {% for push in recent_pushes %}
+          <tr>
+            <td><div class="repo-cell"><span>{{ push.project.name|slice:':1'|upper }}</span><div><strong>{{ push.project.name }}</strong><small>{{ push.project.full_name }}</small></div></div></td>
+            <td><span class="commit-message">{{ push.commit_message|truncatechars:48 }}</span>{% if push.commit_sha %}<small class="mono">{{ push.commit_sha|slice:':8' }}</small>{% endif %}</td>
+            <td><span class="branch-chip">{{ push.branch }}</span></td>
+            <td><span class="status-pill {{ push.status }}"><i></i>{{ push.get_status_display }}</span></td>
+            <td class="muted nowrap">{{ push.created_at|timesince }} ago</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state compact-empty"><div class="empty-icon"><svg><use href="{% static 'gateway/icons.svg' %}#git"></use></svg></div><h3>No pushes yet</h3><p>Create an agent token and give the AI its instructions.</p></div>
+    {% endif %}
+  </section>
+
+  <aside class="dashboard-side">
+    <section class="card quick-card">
+      <div class="card-head"><div><span class="card-kicker">Get started</span><h2>Three simple steps</h2></div></div>
+      <ol class="setup-steps">
+        <li class="{% if project_count %}done{% endif %}"><span>{% if project_count %}<svg><use href="{% static 'gateway/icons.svg' %}#check"></use></svg>{% else %}1{% endif %}</span><div><strong>Add a project</strong><small>Connect a repository and choose branches.</small></div><a href="{% url 'project_create' %}" aria-label="Add project"><svg><use href="{% static 'gateway/icons.svg' %}#chevron"></use></svg></a></li>
+        <li class="{% if active_tokens %}done{% endif %}"><span>{% if active_tokens %}<svg><use href="{% static 'gateway/icons.svg' %}#check"></use></svg>{% else %}2{% endif %}</span><div><strong>Create access</strong><small>Issue one revocable agent token.</small></div><a href="{% url 'token_list' %}" aria-label="Create token"><svg><use href="{% static 'gateway/icons.svg' %}#chevron"></use></svg></a></li>
+        <li><span>3</span><div><strong>Send instructions</strong><small>The AI submits completed file changes.</small></div><a href="{% url 'instructions' %}" aria-label="Open instructions"><svg><use href="{% static 'gateway/icons.svg' %}#chevron"></use></svg></a></li>
+      </ol>
+    </section>
+
+    <section class="card security-card">
+      <div class="security-mark"><svg><use href="{% static 'gateway/icons.svg' %}#shield"></use></svg></div>
+      <div><span class="card-kicker">Credential boundary</span><h2>GitHub stays server-side</h2><p>Agents receive only a project-scoped gateway token. Pushes are always non-force.</p></div>
+      <div class="security-meta"><span>GitHub connection</span><strong>{% if gateway_configured %}{{ gateway_auth_label }}{% else %}Not configured{% endif %}</strong></div>
+    </section>
+  </aside>
+</div>
+{% endblock %}

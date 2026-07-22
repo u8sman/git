@@ -1,0 +1,93 @@
+name: ai-git-gateway
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-aigitgateway}
+      POSTGRES_USER: ${POSTGRES_USER:-aigitgateway}
+      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_POSTGRES}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-aigitgateway} -d ${POSTGRES_DB:-aigitgateway}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    expose:
+      - "8000"
+    environment:
+      SERVICE_URL_WEB_8000: ${SERVICE_URL_WEB_8000:-}
+      DJANGO_SETTINGS_MODULE: aigitgateway.settings.production
+      APP_URL: ${APP_URL:-}
+      SECRET_KEY: ${SERVICE_HEX_64_DJANGO}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-aigitgateway}:${SERVICE_PASSWORD_POSTGRES}@db:5432/${POSTGRES_DB:-aigitgateway}
+      DATABASE_CONN_MAX_AGE: ${DATABASE_CONN_MAX_AGE:-60}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-}
+      CSRF_TRUSTED_ORIGINS: ${CSRF_TRUSTED_ORIGINS:-}
+      TIME_ZONE: ${TIME_ZONE:-Europe/London}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      WEB_CONCURRENCY: ${WEB_CONCURRENCY:-2}
+      GUNICORN_THREADS: ${GUNICORN_THREADS:-2}
+      ALLAUTH_TRUSTED_PROXY_COUNT: ${ALLAUTH_TRUSTED_PROXY_COUNT:-1}
+      CREATE_SUPERUSER: ${CREATE_SUPERUSER:-1}
+      DJANGO_SUPERUSER_USERNAME: ${DJANGO_SUPERUSER_USERNAME:-admin}
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-}
+      DJANGO_SUPERUSER_PASSWORD: ${SERVICE_PASSWORD_ADMIN}
+      RESET_SUPERUSER_PASSWORD: ${RESET_SUPERUSER_PASSWORD:-0}
+      GITHUB_AUTH_MODE: ${GITHUB_AUTH_MODE:-app}
+      GITHUB_APP_ID: ${GITHUB_APP_ID:-}
+      GITHUB_APP_PRIVATE_KEY: ${GITHUB_APP_PRIVATE_KEY:-}
+      GITHUB_APP_PRIVATE_KEY_BASE64: ${GITHUB_APP_PRIVATE_KEY_BASE64:-}
+      GITHUB_APP_PRIVATE_KEY_PATH: ${GITHUB_APP_PRIVATE_KEY_PATH:-}
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      MAX_PUSH_FILES: ${MAX_PUSH_FILES:-100}
+      MAX_FILE_BYTES: ${MAX_FILE_BYTES:-2097152}
+      MAX_REQUEST_BYTES: ${MAX_REQUEST_BYTES:-16777216}
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT:-0}
+      SECURE_HSTS_SECONDS: ${SECURE_HSTS_SECONDS:-0}
+      MIGRATE_ON_START: ${MIGRATE_ON_START:-1}
+      MIGRATION_MAX_ATTEMPTS: ${MIGRATION_MAX_ATTEMPTS:-12}
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/ready/', timeout=3)"]
+      interval: 20s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
+    ulimits:
+      nofile:
+        soft: 4096
+        hard: 8192
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
+    stop_grace_period: 35s
+
+volumes:
+  postgres_data:

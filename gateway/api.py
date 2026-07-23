@@ -357,8 +357,8 @@ def api_openapi(request):
                             "name": "recursive",
                             "in": "query",
                             "required": False,
-                            "description": "Set to true or 1 to fetch the entire repository directory tree recursively.",
-                            "schema": { "type": "string" }
+                            "description": "Set to true to fetch the entire repository directory tree recursively.",
+                            "schema": { "type": "boolean" }
                         }
                     ],
                     "responses": {
@@ -451,16 +451,15 @@ def api_openapi(request):
         "components": {
             "schemas": {},
             "securitySchemes": {
-                "ApiKeyAuth": {
-                    "type": "apiKey",
-                    "in": "header",
-                    "name": "Authorization"
+                "BearerAuth": {
+                    "type": "http",
+                    "scheme": "bearer"
                 }
             }
         },
         "security": [
             {
-                "ApiKeyAuth": []
+                "BearerAuth": []
             }
         ]
     }

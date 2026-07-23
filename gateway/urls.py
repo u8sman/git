@@ -16,6 +16,7 @@ urlpatterns = [
     path("api/v1/projects", api.api_projects, name="api_projects"),
     path("api/v1/pull", api.api_pull, name="api_pull"),
     path("api/v1/push", api.api_push, name="api_push"),
+    path("api/v1/openapi.json", api.api_openapi, name="api_openapi"),
     path("health/", views.health, name="health"),
     path("ready/", views.readiness, name="readiness"),
 ]

@@ -268,3 +268,176 @@ def api_pull(request):
         return JsonResponse(payload, status=exc.status_code)
     except Exception as exc:
         return JsonResponse({"error": f"Unexpected server error: {str(exc)}"}, status=500)
+
+
+@csrf_exempt
+@require_GET
+def api_openapi(request):
+    server_url = request.build_absolute_uri("/api/v1").rstrip("/")
+    schema = {
+        "openapi": "3.0.0",
+        "info": {
+            "title": "AI Git Gateway API",
+            "description": "Secure API to discover projects, pull file structures/contents, and push commits to GitHub.",
+            "version": "1.0.0"
+        },
+        "servers": [
+            {
+                "url": server_url,
+                "description": "Current gateway server"
+            }
+        ],
+        "paths": {
+            "/projects": {
+                "get": {
+                    "summary": "List allowed projects",
+                    "description": "Retrieve the list of projects allowed for this agent token, along with repository details and branch policies.",
+                    "operationId": "listProjects",
+                    "responses": {
+                        "200": {
+                            "description": "List of allowed projects",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object",
+                                        "properties": {
+                                            "projects": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "slug": { "type": "string" },
+                                                        "name": { "type": "string" },
+                                                        "repository": { "type": "string" },
+                                                        "default_branch": { "type": "string" },
+                                                        "direct_push_enabled": { "type": "boolean" },
+                                                        "allowed_branches": {
+                                                            "type": "array",
+                                                            "items": { "type": "string" }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "/pull": {
+                "get": {
+                    "summary": "Pull repository file tree or file contents",
+                    "description": "Retrieve a list of files (the tree) or fetch the contents of a specific file.",
+                    "operationId": "pullFiles",
+                    "parameters": [
+                        {
+                            "name": "project",
+                            "in": "query",
+                            "required": True,
+                            "description": "The project slug",
+                            "schema": { "type": "string" }
+                        },
+                        {
+                            "name": "branch",
+                            "in": "query",
+                            "required": False,
+                            "description": "Target branch (defaults to the project's default branch)",
+                            "schema": { "type": "string" }
+                        },
+                        {
+                            "name": "path",
+                            "in": "query",
+                            "required": False,
+                            "description": "Relative path to file or directory. If not specified, defaults to root folder.",
+                            "schema": { "type": "string" }
+                        },
+                        {
+                            "name": "recursive",
+                            "in": "query",
+                            "required": False,
+                            "description": "Set to true or 1 to fetch the entire repository directory tree recursively.",
+                            "schema": { "type": "string" }
+                        }
+                    ],
+                    "responses": {
+                        "200": {
+                            "description": "File tree or file contents response",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "/push": {
+                "post": {
+                    "summary": "Push new commit",
+                    "description": "Commit changes and push directly to GitHub.",
+                    "operationId": "pushCommit",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "project": { "type": "string", "description": "The project slug" },
+                                        "branch": { "type": "string", "description": "Target branch" },
+                                        "commit_message": { "type": "string", "description": "Commit message" },
+                                        "expected_head": { "type": "string", "description": "Optional current commit SHA for conflict protection" },
+                                        "files": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "path": { "type": "string", "description": "Relative file path" },
+                                                    "content": { "type": "string", "description": "UTF-8 content for text files" },
+                                                    "content_base64": { "type": "string", "description": "Base64 content for binary files" },
+                                                    "delete": { "type": "boolean", "description": "Set to true to delete this file" }
+                                                },
+                                                "required": ["path"]
+                                            }
+                                        }
+                                    },
+                                    "required": ["project", "commit_message", "files"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {
+                        "201": {
+                            "description": "Commit pushed successfully",
+                            "content": {
+                                "application/json": {
+                                    "schema": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "components": {
+            "securitySchemes": {
+                "ApiKeyAuth": {
+                    "type": "apiKey",
+                    "in": "header",
+                    "name": "Authorization"
+                }
+            }
+        },
+        "security": [
+            {
+                "ApiKeyAuth": []
+            }
+        ]
+    }
+    return JsonResponse(schema)

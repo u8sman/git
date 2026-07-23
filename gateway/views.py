@@ -115,6 +115,17 @@ def token_revoke(request, pk):
 
 
 @staff_required
+@require_POST
+def token_toggle_pause(request, pk):
+    token = get_object_or_404(AgentToken, pk=pk)
+    token.is_paused = not token.is_paused
+    token.save(update_fields=["is_paused"])
+    status = "paused" if token.is_paused else "resumed"
+    messages.success(request, f"Token {token.name} has been {status}.")
+    return redirect("token_list")
+
+
+@staff_required
 def push_history(request):
     pushes = PushRecord.objects.select_related("project", "token")[:250]
     return render(request, "gateway/history.html", {"pushes": pushes})
@@ -133,12 +144,19 @@ def instructions_json(request):
         {
             "name": "AI Git Gateway",
             "purpose": (
-                "Submit completed file changes and push a non-force Git commit "
-                "directly to GitHub."
+                "Retrieve file structure and submit completed file changes to "
+                "directly push a non-force Git commit to GitHub."
             ),
             "authentication": "Authorization: Bearer <agent-token>",
             "projects_endpoint": f"{api_base}/projects",
+            "pull_endpoint": f"{api_base}/pull",
             "push_endpoint": f"{api_base}/push",
+            "pull_schema": {
+                "project": "project slug (required)",
+                "branch": "target branch; optional when project default is correct",
+                "path": "relative path to file/directory; optional",
+                "recursive": "set to 1 or true to retrieve the entire repository file tree recursively"
+            },
             "push_schema": {
                 "project": "project slug",
                 "branch": "target branch; optional when project default is correct",
@@ -151,6 +169,7 @@ def instructions_json(request):
                 ],
             },
             "rules": [
+                "Pull files or the directory structure first to understand the workspace.",
                 "Finish and verify the code before pushing.",
                 "Never reveal or commit the agent token.",
                 "Do not retry conflicts blindly.",

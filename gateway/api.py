@@ -212,3 +212,59 @@ def api_push(request):
         },
         status=201,
     )
+
+
+@csrf_exempt
+@require_GET
+def api_pull(request):
+    auth = authenticate_request(request)
+    if auth.error:
+        return auth.error
+
+    project_slug = request.GET.get("project")
+    if not project_slug:
+        return JsonResponse({"error": "project is required."}, status=400)
+
+    try:
+        project = Project.objects.get(slug=project_slug, is_active=True)
+    except Project.DoesNotExist:
+        return JsonResponse({"error": "Project not found or inactive."}, status=404)
+
+    if not auth.token.can_access(project):
+        return JsonResponse({"error": "This token cannot access that project."}, status=403)
+
+    branch = request.GET.get("branch") or project.default_branch
+    if not _valid_branch_name(branch) or not project.branch_is_allowed(branch):
+        return JsonResponse({"error": f"Branch '{branch}' is not allowed."}, status=403)
+
+    path = request.GET.get("path") or ""
+    recursive = request.GET.get("recursive") in ("1", "true")
+
+    try:
+        with GitHubClient(project) as github:
+            if recursive:
+                head_sha = github.get_ref(branch)
+                commit = github.get_commit(head_sha)
+                tree_sha = commit["tree"]["sha"]
+                tree_data = github.get_tree(tree_sha, recursive=True)
+                return JsonResponse({
+                    "project": project.slug,
+                    "branch": branch,
+                    "commit_sha": head_sha,
+                    "tree": tree_data.get("tree", [])
+                })
+            else:
+                contents = github.get_contents(path, branch)
+                return JsonResponse({
+                    "project": project.slug,
+                    "branch": branch,
+                    "path": path,
+                    "contents": contents
+                })
+    except GitHubAPIError as exc:
+        payload = {"error": str(exc)}
+        if settings.DEBUG and exc.details:
+            payload["details"] = exc.details
+        return JsonResponse(payload, status=exc.status_code)
+    except Exception as exc:
+        return JsonResponse({"error": f"Unexpected server error: {str(exc)}"}, status=500)

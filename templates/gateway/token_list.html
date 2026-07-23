@@ -27,11 +27,28 @@
     {% if tokens %}
     <div class="token-list">
       {% for token in tokens %}
-      <article class="token-row {% if not token.is_active %}inactive{% endif %}">
+      <article class="token-row {% if not token.is_active and not token.is_paused %}inactive{% endif %}">
         <div class="token-symbol"><svg><use href="{% static 'gateway/icons.svg' %}#key"></use></svg></div>
-        <div class="token-main"><div class="token-name"><strong>{{ token.name }}</strong><span class="status-pill {% if token.is_active %}warning{% else %}neutral{% endif %}"><i></i>{% if token.is_active %}Active{% elif token.revoked_at %}Revoked{% else %}Expired{% endif %}</span></div><code>{{ token.display_token }}</code><p>{% if token.all_projects %}All projects{% else %}{% for project in token.projects.all %}{{ project.name }}{% if not forloop.last %}<span>·</span>{% endif %}{% empty %}No projects{% endfor %}{% endif %}</p></div>
+        <div class="token-main"><div class="token-name"><strong>{{ token.name }}</strong><span class="status-pill {% if token.is_active %}warning{% elif token.is_paused %}danger{% else %}neutral{% endif %}"><i></i>{% if token.is_active %}Active{% elif token.revoked_at %}Revoked{% elif token.is_paused %}Paused{% else %}Expired{% endif %}</span></div><code>{{ token.display_token }}</code><p>{% if token.all_projects %}All projects{% else %}{% for project in token.projects.all %}{{ project.name }}{% if not forloop.last %}<span>·</span>{% endif %}{% empty %}No projects{% endfor %}{% endif %}</p></div>
         <div class="token-usage"><span>Last used</span><strong>{% if token.last_used_at %}{{ token.last_used_at|timesince }} ago{% else %}Never{% endif %}</strong><small>{% if token.expires_at %}Expires {{ token.expires_at|date:'j M Y' }}{% else %}No expiry{% endif %}</small></div>
-        <div class="token-action">{% if token.is_active %}<form method="post" action="{% url 'token_revoke' token.pk %}" onsubmit="return confirm('Revoke this token now? The AI will immediately lose access.')">{% csrf_token %}<button class="button danger compact" type="submit">Revoke</button></form>{% else %}<span class="muted">Closed</span>{% endif %}</div>
+        <div class="token-action">
+          {% if not token.revoked_at and not token.is_expired %}
+            <form method="post" action="{% url 'token_toggle_pause' token.pk %}" style="display: inline-block;">
+              {% csrf_token %}
+              {% if token.is_paused %}
+                <button class="button secondary compact" type="submit" style="margin-right: 4px;">Resume</button>
+              {% else %}
+                <button class="button secondary compact" type="submit" style="margin-right: 4px;">Pause</button>
+              {% endif %}
+            </form>
+            <form method="post" action="{% url 'token_revoke' token.pk %}" onsubmit="return confirm('Revoke this token now? The AI will immediately lose access.')" style="display: inline-block;">
+              {% csrf_token %}
+              <button class="button danger compact" type="submit">Revoke</button>
+            </form>
+          {% else %}
+            <span class="muted">Closed</span>
+          {% endif %}
+        </div>
       </article>
       {% endfor %}
     </div>

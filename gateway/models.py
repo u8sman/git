@@ -74,6 +74,7 @@ class AgentToken(models.Model):
     last_used_at = models.DateTimeField(null=True, blank=True)
     expires_at = models.DateTimeField(null=True, blank=True)
     revoked_at = models.DateTimeField(null=True, blank=True)
+    is_paused = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["-created_at"]
@@ -112,8 +113,12 @@ class AgentToken(models.Model):
         return token
 
     @property
+    def is_expired(self):
+        return self.expires_at is not None and self.expires_at <= timezone.now()
+
+    @property
     def is_active(self):
-        if self.revoked_at:
+        if self.revoked_at or self.is_paused:
             return False
         return not self.expires_at or self.expires_at > timezone.now()
 

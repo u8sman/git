@@ -190,3 +190,15 @@ class GitHubClient:
             "url": f"https://github.com/{self.project.full_name}/commit/{commit_sha}",
             "previous_head": head_sha,
         }
+
+    def get_contents(self, path, branch):
+        # path can be empty for repository root
+        url_path = f"{self.repo_path}/contents/{path.lstrip('/')}"
+        response = self._request("GET", url_path, params={"ref": branch})
+        return response.json()
+
+    def get_tree(self, tree_sha, *, recursive=True):
+        params = {"recursive": "1"} if recursive else {}
+        response = self._request("GET", f"{self.repo_path}/git/trees/{tree_sha}", params=params)
+        return response.json()
+

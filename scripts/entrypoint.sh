@@ -22,7 +22,6 @@ if is_true "${MIGRATE_ON_START:-1}"; then
   done
 fi
 
-export PYTHONPATH=.
 python scripts/bootstrap_admin.py
 
 exec "$@"

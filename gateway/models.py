@@ -35,6 +35,16 @@ class Project(models.Model):
         ordering = ["name"]
 
     def save(self, *args, **kwargs):
+        for field in ["github_owner", "github_repo"]:
+            val = getattr(self, field, "")
+            if val and val.startswith("http"):
+                path = val.split("github.com/")[-1].strip("/")
+                parts = path.split("/")
+                if len(parts) >= 2:
+                    self.github_owner = parts[0]
+                    self.github_repo = parts[1].removesuffix(".git")
+                    break
+
         if not self.slug:
             base = slugify(self.name) or "project"
             candidate = base

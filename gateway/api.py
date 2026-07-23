@@ -291,8 +291,9 @@ def api_openapi(request):
             "/projects": {
                 "get": {
                     "summary": "List allowed projects",
-                    "description": "Retrieve the list of projects allowed for this agent token, along with repository details and branch policies.",
+                    "description": "Retrieve the list of projects allowed for this agent token. Do not pass any parameters, query arguments, or request body.",
                     "operationId": "listProjects",
+                    "parameters": [],
                     "responses": {
                         "200": {
                             "description": "List of allowed projects",

@@ -275,7 +275,7 @@ def api_pull(request):
 def api_openapi(request):
     server_url = request.build_absolute_uri("/api/v1").rstrip("/")
     schema = {
-        "openapi": "3.0.0",
+        "openapi": "3.1.0",
         "info": {
             "title": "AI Git Gateway API",
             "description": "Secure API to discover projects, pull file structures/contents, and push commits to GitHub.",
@@ -367,7 +367,20 @@ def api_openapi(request):
                             "content": {
                                 "application/json": {
                                     "schema": {
-                                        "type": "object"
+                                        "type": "object",
+                                        "properties": {
+                                            "project": { "type": "string" },
+                                            "branch": { "type": "string" },
+                                            "path": { "type": "string" },
+                                            "contents": {
+                                                "type": "array",
+                                                "items": { "type": "object", "additionalProperties": True }
+                                            },
+                                            "tree": {
+                                                "type": "array",
+                                                "items": { "type": "object", "additionalProperties": True }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -416,7 +429,17 @@ def api_openapi(request):
                             "content": {
                                 "application/json": {
                                     "schema": {
-                                        "type": "object"
+                                        "type": "object",
+                                        "properties": {
+                                            "ok": { "type": "boolean" },
+                                            "push_id": { "type": "integer" },
+                                            "project": { "type": "string" },
+                                            "repository": { "type": "string" },
+                                            "branch": { "type": "string" },
+                                            "commit_sha": { "type": "string" },
+                                            "commit_url": { "type": "string" },
+                                            "previous_head": { "type": "string" }
+                                        }
                                     }
                                 }
                             }
@@ -426,6 +449,7 @@ def api_openapi(request):
             }
         },
         "components": {
+            "schemas": {},
             "securitySchemes": {
                 "ApiKeyAuth": {
                     "type": "apiKey",

@@ -12,7 +12,7 @@
 
 <div class="docs-grid">
   <aside class="docs-aside">
-    <nav class="card docs-nav"><span>On this page</span><a href="#agent-prompt">Agent prompt</a><a href="#discover">Discover projects</a><a href="#pull">Pull files/tree</a><a href="#push">Push files</a><a href="#rules">Rules</a></nav>
+    <nav class="card docs-nav"><span>On this page</span><a href="#agent-prompt">Agent prompt</a><a href="#discover">Discover projects</a><a href="#pull">Pull files/tree</a><a href="#push">Push files</a><a href="#chatgpt">ChatGPT Setup</a><a href="#rules">Rules</a></nav>
     <section class="card docs-tip"><svg><use href="{% static 'gateway/icons.svg' %}#shield"></use></svg><strong>The AI never needs your GitHub token.</strong><p>Give it only the `aig_...` gateway token.</p></section>
   </aside>
 
@@ -121,8 +121,20 @@ print(response.json()["commit_url"])</pre></div>
 }</pre></div>
     </section>
 
+    <section id="chatgpt" class="card docs-card">
+      <div class="docs-card-head"><div><span>05</span><h2>ChatGPT Actions Setup</h2></div></div>
+      <p style="margin-bottom: 12px;">You can connect a ChatGPT Custom GPT directly to this gateway using the OpenAPI specification:</p>
+      <ol style="margin-left: 20px; margin-bottom: 16px; line-height: 1.6;">
+        <li style="margin-bottom: 4px;">Open the <strong>Configure</strong> tab of your Custom GPT in ChatGPT.</li>
+        <li style="margin-bottom: 4px;">Scroll down and click <strong>Create new action</strong> (or Add Action).</li>
+        <li style="margin-bottom: 4px;">Click <strong>Import from URL</strong> and enter: <code style="word-break: break-all;">{{ api_base }}/openapi.json</code></li>
+        <li style="margin-bottom: 4px;">Under <strong>Authentication</strong>, select <strong>API Key</strong>, choose <strong>Bearer</strong> as the Auth Type, and paste your active agent token.</li>
+      </ol>
+      <p class="docs-note">Once imported, ChatGPT will automatically discover and execute actions to list projects, pull directory trees/files, and push your commits.</p>
+    </section>
+
     <section id="rules" class="card docs-card">
-      <div class="docs-card-head"><div><span>05</span><h2>Delivery rules</h2></div></div>
+      <div class="docs-card-head"><div><span>06</span><h2>Delivery rules</h2></div></div>
       <div class="rules-grid">
         <div><svg><use href="{% static 'gateway/icons.svg' %}#check"></use></svg><div><strong>Completed files only</strong><p>The gateway does not execute code or shell commands.</p></div></div>
         <div><svg><use href="{% static 'gateway/icons.svg' %}#shield"></use></svg><div><strong>Non-force pushes</strong><p>GitHub rejects protected branches and conflicting updates.</p></div></div>
